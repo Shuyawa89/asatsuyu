@@ -3,15 +3,15 @@ import SwiftUI
 struct TimerView: View {
     @StateObject private var viewModel = TimerViewModel()
     @EnvironmentObject private var notchOverlayManager: NotchOverlayManager
-    
+
     var body: some View {
         VStack(spacing: 20) {
             // セッション情報
             sessionHeader
-            
+
             // 円形プログレス表示
             circularProgress
-            
+
             // 制御ボタン
             controlButtons
         }
@@ -22,9 +22,9 @@ struct TimerView: View {
             notchOverlayManager.connectToTimer(viewModel)
         }
     }
-    
+
     // MARK: - UI Components
-    
+
     private var sessionHeader: some View {
         VStack(spacing: 8) {
             HStack {
@@ -34,7 +34,7 @@ struct TimerView: View {
                     .font(.headline)
                     .foregroundColor(viewModel.sessionColor)
             }
-            
+
             if viewModel.currentCycle > 0 {
                 Text("サイクル \(viewModel.currentCycle)")
                     .font(.caption)
@@ -42,14 +42,14 @@ struct TimerView: View {
             }
         }
     }
-    
+
     private var circularProgress: some View {
         ZStack {
             // 背景の円
             Circle()
                 .stroke(Color.gray.opacity(0.3), lineWidth: 8)
                 .frame(width: 120, height: 120)
-            
+
             // プログレス円
             Circle()
                 .trim(from: 0, to: viewModel.progress)
@@ -60,21 +60,21 @@ struct TimerView: View {
                 .frame(width: 120, height: 120)
                 .rotationEffect(.degrees(-90))
                 .animation(.easeInOut(duration: 0.3), value: viewModel.progress)
-            
+
             // 時間表示
             VStack {
                 Text(viewModel.timeRemainingString)
                     .font(.title2)
                     .fontWeight(.medium)
                     .monospacedDigit()
-                
+
                 Text(timerStateText)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
         }
     }
-    
+
     private var controlButtons: some View {
         HStack(spacing: 16) {
             // 開始/一時停止ボタン
@@ -87,7 +87,7 @@ struct TimerView: View {
             }
             .buttonStyle(.borderedProminent)
             .disabled(!viewModel.canStart && !viewModel.canPause)
-            
+
             // 停止ボタン
             Button(action: viewModel.stopTimer) {
                 HStack {
@@ -100,9 +100,9 @@ struct TimerView: View {
             .disabled(!viewModel.canStop)
         }
     }
-    
+
     // MARK: - Helper Properties
-    
+
     private var timerStateText: String {
         switch viewModel.pomodoroTimer.currentState {
         case .running:
@@ -113,7 +113,7 @@ struct TimerView: View {
             return "停止中"
         }
     }
-    
+
     private var primaryButtonText: String {
         switch viewModel.pomodoroTimer.currentState {
         case .running:
@@ -124,7 +124,7 @@ struct TimerView: View {
             return "開始"
         }
     }
-    
+
     private var primaryButtonIcon: String {
         switch viewModel.pomodoroTimer.currentState {
         case .running:
@@ -135,7 +135,7 @@ struct TimerView: View {
             return "play.fill"
         }
     }
-    
+
     private func primaryButtonAction() {
         switch viewModel.pomodoroTimer.currentState {
         case .running:

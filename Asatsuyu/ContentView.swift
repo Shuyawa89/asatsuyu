@@ -6,12 +6,12 @@ struct ContentView: View {
             Text("朝露 (Asatsuyu)")
                 .font(.title)
                 .fontWeight(.medium)
-            
+
             Text("ポモドーロタイマー + メモ")
                 .foregroundColor(.secondary)
-            
+
             Spacer()
-            
+
             Text("開発中...")
                 .foregroundColor(.secondary)
         }

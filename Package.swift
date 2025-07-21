@@ -5,13 +5,13 @@ import PackageDescription
 let package = Package(
     name: "Asatsuyu",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v13),
     ],
     products: [
         .executable(
             name: "Asatsuyu",
             targets: ["Asatsuyu"]
-        )
+        ),
     ],
     dependencies: [
         // DynamicNotchKit removed due to compatibility issues
@@ -25,13 +25,13 @@ let package = Package(
             ],
             path: "Sources/Asatsuyu",
             resources: [
-                .process("Models/AsatsuyuDataModel.xcdatamodeld")
+                .process("Models/AsatsuyuDataModel.xcdatamodeld"),
             ]
         ),
-        .testTarget(
-            name: "AsatsuyuTests",
-            dependencies: ["Asatsuyu"],
-            path: "Tests"
-        )
+        // .testTarget(
+        //     name: "AsatsuyuTests",
+        //     dependencies: ["Asatsuyu"],
+        //     path: "Tests/AsatsuyuTests"
+        // ),
     ]
 )

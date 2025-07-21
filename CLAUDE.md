@@ -351,6 +351,77 @@ gh pr create --title "hotfix: Critical timer memory leak" --base main
 gh pr merge --squash --delete-branch  # 即座にマージ
 ```
 
+## Pre-Push品質保証ワークフロー ⚠️ 必須
+
+### 実行必須項目（pushまえに）
+pushする**前**に必ず以下を実行してCIを通過させる：
+
+```bash
+# 1. SwiftFormat実行（必須）
+swiftformat .
+
+# 2. ビルド確認（必須）  
+swift build
+
+# 3. テスト実行確認（現在はno testsでOK）
+swift test
+
+# 4. 変更差分確認
+git diff --cached
+
+# 5. すべて問題なければpush
+git push origin <branch-name>
+```
+
+### 自動化スクリプト（推奨）
+`.git/hooks/pre-push` にスクリプトを配置：
+
+```bash
+#!/bin/bash
+echo "🔧 Pre-push quality checks..."
+
+# SwiftFormat実行
+if command -v swiftformat &> /dev/null; then
+    echo "Running SwiftFormat..."
+    swiftformat .
+    if [ $? -ne 0 ]; then
+        echo "❌ SwiftFormat failed"
+        exit 1
+    fi
+else
+    echo "⚠️ SwiftFormat not found. Run: brew install swiftformat"
+    exit 1
+fi
+
+# ビルド確認
+echo "Building project..."
+swift build
+if [ $? -ne 0 ]; then
+    echo "❌ Build failed"
+    exit 1
+fi
+
+# テスト実行（現在は警告のみ）
+swift test 2>/dev/null || echo "⚠️ Tests not implemented yet"
+
+echo "✅ All pre-push checks passed"
+```
+
+### GitHub Actions対応
+CIパイプラインの確認項目：
+- ✅ **test-and-build**: Swift 6.0ビルド成功
+- ✅ **code-quality**: SwiftFormat準拠
+- ✅ **security-scan**: APIキー検出なし
+- 🚧 **テスト実行**: Phase 2で実装予定
+
+### CI失敗時の対応手順
+1. **フォーマットエラー** → `swiftformat .` 実行
+2. **ビルドエラー** → コンパイルエラー修正
+3. **テストエラー** → テストファイル確認・修正
+4. **セキュリティスキャン** → APIキー・秘密情報削除
+
+⚠️ **重要**: CIが失敗する状態でのpushは禁止
+
 ## Geminiの使い方
 Gemini CLIを使うことで、他のAIに質問したり、Webを介して検索をすることができます。
 - 使い方

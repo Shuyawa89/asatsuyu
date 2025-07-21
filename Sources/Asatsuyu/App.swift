@@ -1,5 +1,5 @@
-import SwiftUI
 import AppKit
+import SwiftUI
 import UserNotifications
 
 @main
@@ -7,12 +7,12 @@ struct AsatsuyuApp: App {
     @StateObject private var persistenceController = PersistenceController.shared
     @StateObject private var settingsManager = SettingsManager.shared
     @StateObject private var notchOverlayManager = NotchOverlayManager.shared
-    
+
     init() {
         requestNotificationPermission()
         setupAppTerminationNotification()
     }
-    
+
     var body: some Scene {
         MenuBarExtra("Asatsuyu", systemImage: "timer") {
             ContentView()
@@ -26,9 +26,9 @@ struct AsatsuyuApp: App {
         }
         .menuBarExtraStyle(.window)
     }
-    
+
     // MARK: - Notification Setup
-    
+
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
             if let error = error {
@@ -37,7 +37,7 @@ struct AsatsuyuApp: App {
             print("通知許可: \(granted)")
         }
     }
-    
+
     private func setupAppTerminationNotification() {
         NotificationCenter.default.addObserver(
             forName: NSApplication.willTerminateNotification,
@@ -49,7 +49,7 @@ struct AsatsuyuApp: App {
             }
         }
     }
-    
+
     @MainActor
     private static func sendClaudeCodeCompletionNotification() {
         let content = UNMutableNotificationContent()
@@ -57,16 +57,16 @@ struct AsatsuyuApp: App {
         content.body = NSLocalizedString("Asatsuyu application development session has ended.", comment: "Asatsuyuアプリケーションの開発セッションが終了しました")
         content.sound = .default
         content.categoryIdentifier = "CLAUDE_CODE_COMPLETION"
-        
+
         // 小さな遅延を追加して配信の信頼性を向上
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
-        
+
         let request = UNNotificationRequest(
             identifier: "claude-code-completion-\(Date().timeIntervalSince1970)",
             content: content,
             trigger: trigger
         )
-        
+
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
                 print("通知送信エラー: \(error.localizedDescription)")

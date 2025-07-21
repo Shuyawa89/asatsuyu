@@ -1,14 +1,14 @@
 import AppKit
-import SwiftUI
 import Combine
+import SwiftUI
 
 @MainActor
 class NotchOverlayManager: ObservableObject {
     static let shared = NotchOverlayManager()
-    
+
     private var overlayWindow: NotchOverlayWindow?
     private var cancellables = Set<AnyCancellable>()
-    
+
     @Published var isNotchOverlayEnabled: Bool = true {
         didSet {
             if isNotchOverlayEnabled {
@@ -18,11 +18,11 @@ class NotchOverlayManager: ObservableObject {
             }
         }
     }
-    
+
     private init() {
         setupOverlayWindow()
     }
-    
+
     private func setupOverlayWindow() {
         let initialRect = NSRect(x: 0, y: 0, width: 200, height: 32)
         overlayWindow = NotchOverlayWindow(
@@ -32,22 +32,22 @@ class NotchOverlayManager: ObservableObject {
             defer: false
         )
     }
-    
+
     func showOverlay() {
         overlayWindow?.show()
     }
-    
+
     func hideOverlay() {
         overlayWindow?.hide()
     }
-    
+
     func updateProgress(_ progress: Double, sessionType: SessionType) {
         let cgProgress = CGFloat(progress)
         let color = colorForSessionType(sessionType)
-        
+
         overlayWindow?.updateProgress(cgProgress, color: color)
     }
-    
+
     private func colorForSessionType(_ sessionType: SessionType) -> NSColor {
         switch sessionType {
         case .work:
@@ -58,7 +58,7 @@ class NotchOverlayManager: ObservableObject {
             return .systemBlue
         }
     }
-    
+
     func connectToTimer(_ timerViewModel: TimerViewModel) {
         // タイマーの変更を監視してオーバーレイを更新
         // PomodoroTimerの各プロパティの変更を個別に監視

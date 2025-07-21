@@ -5,36 +5,36 @@ class NotchOverlayWindow: NSWindow {
     private var notchProgress: CGFloat = 0.0
     private var notchColor: NSColor = .controlAccentColor
     private var isNotchPresent: Bool = false
-    
-    override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
+
+    override init(contentRect: NSRect, styleMask _: NSWindow.StyleMask, backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
         super.init(contentRect: contentRect, styleMask: [.borderless], backing: backingStoreType, defer: flag)
-        
+
         setupWindow()
         detectNotch()
     }
-    
+
     private func setupWindow() {
         // ウィンドウの基本設定
-        level = .screenSaver  // メニューバーより上に表示
+        level = .screenSaver // メニューバーより上に表示
         backgroundColor = .clear
         isOpaque = false
         hasShadow = false
         ignoresMouseEvents = false
         collectionBehavior = [.canJoinAllSpaces, .stationary]
-        
+
         // ウィンドウをすべてのスペースで最前面に表示
         setAccessibilityRole(.unknown)
     }
-    
+
     private func detectNotch() {
-        guard let screen = NSScreen.main else { 
+        guard let screen = NSScreen.main else {
             print("NotchOverlay: No main screen found")
-            return 
+            return
         }
-        
+
         let screenSize = screen.frame.size
         print("NotchOverlay: Screen size: \(screenSize)")
-        
+
         // ノッチ検出ロジック
         // macOS 14以降のノッチ搭載Macでは、safeAreaInsetsでノッチエリアを検出可能
         if #available(macOS 14.0, *) {
@@ -44,12 +44,12 @@ class NotchOverlayWindow: NSWindow {
         } else {
             // フォールバック: 解像度ベースでの推定
             isNotchPresent = (screenSize.width == 3024 && screenSize.height == 1964) || // MacBook Pro 14"
-                            (screenSize.width == 3456 && screenSize.height == 2234) || // MacBook Pro 16"
-                            (screenSize.width == 2560 && screenSize.height == 1664)    // MacBook Air 13"
+                (screenSize.width == 3456 && screenSize.height == 2234) || // MacBook Pro 16"
+                (screenSize.width == 2560 && screenSize.height == 1664) // MacBook Air 13"
         }
-        
+
         print("NotchOverlay: Notch present: \(isNotchPresent)")
-        
+
         if isNotchPresent {
             setupNotchOverlay()
         } else {
@@ -58,18 +58,18 @@ class NotchOverlayWindow: NSWindow {
             setupNotchOverlay()
         }
     }
-    
+
     private func setupNotchOverlay() {
-        guard let screen = NSScreen.main else { 
+        guard let screen = NSScreen.main else {
             print("NotchOverlay: No main screen for setup")
-            return 
+            return
         }
-        
+
         // ノッチエリアの推定座標
         let screenFrame = screen.frame
-        let notchWidth: CGFloat = 200  // ノッチの推定幅
-        let notchHeight: CGFloat = 32  // ノッチの推定高さ
-        
+        let notchWidth: CGFloat = 200 // ノッチの推定幅
+        let notchHeight: CGFloat = 32 // ノッチの推定高さ
+
         // ノッチ中央に配置
         let notchRect = NSRect(
             x: screenFrame.midX - (notchWidth / 2),
@@ -77,38 +77,38 @@ class NotchOverlayWindow: NSWindow {
             width: notchWidth,
             height: notchHeight
         )
-        
+
         print("NotchOverlay: Setting frame to: \(notchRect)")
         setFrame(notchRect, display: true)
-        
+
         // カスタムビューを設定
         let overlayView = NotchProgressView()
         overlayView.translatesAutoresizingMaskIntoConstraints = false
-        
+
         contentView = overlayView
         print("NotchOverlay: Overlay view setup complete")
     }
-    
+
     // フレーム制約を無効化してノッチエリアへのアクセスを許可
-    override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect {
+    override func constrainFrameRect(_ frameRect: NSRect, to _: NSScreen?) -> NSRect {
         return frameRect
     }
-    
+
     // MARK: - Public Methods
-    
+
     func updateProgress(_ progress: CGFloat, color: NSColor) {
-        self.notchProgress = progress
-        self.notchColor = color
-        
+        notchProgress = progress
+        notchColor = color
+
         if let overlayView = contentView as? NotchProgressView {
             overlayView.updateProgress(progress, color: color)
         }
     }
-    
+
     func hide() {
         orderOut(nil)
     }
-    
+
     func show() {
         print("NotchOverlay: show() called")
         // テスト目的で常に表示（ノッチの有無に関係なく）
@@ -122,55 +122,56 @@ class NotchOverlayWindow: NSWindow {
 class NotchProgressView: NSView {
     private var progress: CGFloat = 0.0
     private var progressColor: NSColor = .controlAccentColor
-    
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
         layer?.backgroundColor = NSColor.clear.cgColor
     }
-    
-    required init?(coder: NSCoder) {
+
+    @available(*, unavailable)
+    required init?(coder _: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        
+
         guard let context = NSGraphicsContext.current?.cgContext else { return }
-        
+
         // ノッチ形状の描画
         drawNotchProgress(in: context, rect: bounds)
     }
-    
+
     private func drawNotchProgress(in context: CGContext, rect: NSRect) {
         // ノッチの外径に沿った進捗バーを描画
         let center = CGPoint(x: rect.midX, y: rect.midY)
         let radius: CGFloat = min(rect.width, rect.height) * 0.4
         let lineWidth: CGFloat = 3.0
-        
+
         // 背景の円弧
         context.setStrokeColor(NSColor.gray.withAlphaComponent(0.3).cgColor)
         context.setLineWidth(lineWidth)
         context.setLineCap(.round)
-        
+
         let backgroundPath = CGMutablePath()
         backgroundPath.addArc(
             center: center,
             radius: radius,
-            startAngle: -.pi / 2,  // 上から開始
+            startAngle: -.pi / 2, // 上から開始
             endAngle: -.pi / 2 + (2 * .pi * 0.75), // 270度（進捗アークと同じ）
             clockwise: false
         )
         context.addPath(backgroundPath)
         context.strokePath()
-        
+
         // プログレス円弧
         if progress > 0 {
             context.setStrokeColor(progressColor.cgColor)
-            
+
             let progressPath = CGMutablePath()
             let endAngle = -.pi / 2 + (2 * .pi * progress * 0.75) // 270度まで
-            
+
             progressPath.addArc(
                 center: center,
                 radius: radius,
@@ -182,11 +183,11 @@ class NotchProgressView: NSView {
             context.strokePath()
         }
     }
-    
+
     func updateProgress(_ progress: CGFloat, color: NSColor) {
         self.progress = max(0, min(1, progress))
-        self.progressColor = color
-        
+        progressColor = color
+
         DispatchQueue.main.async {
             self.needsDisplay = true
         }

@@ -21,6 +21,7 @@ enum SessionType: String, CaseIterable {
     }
 }
 
+@MainActor
 class PomodoroTimer: ObservableObject {
     @Published var currentState: TimerState = .stopped
     @Published var currentSessionType: SessionType = .work
@@ -30,15 +31,27 @@ class PomodoroTimer: ObservableObject {
     
     private var timer: Timer?
     private var sessionStartTime: Date?
+    private let settingsManager: SettingsManager
+    private var cancellables = Set<AnyCancellable>()
     
-    // 設定値
-    private let workDuration: TimeInterval = 30 * 60 // 30分
-    private let shortBreakDuration: TimeInterval = 5 * 60 // 5分
-    private let longBreakDuration: TimeInterval = 15 * 60 // 15分
-    private let cyclesUntilLongBreak: Int = 4
-    
-    init() {
+    init(settingsManager: SettingsManager = SettingsManager.shared) {
+        self.settingsManager = settingsManager
         resetTimer()
+        
+        // 設定変更の監視
+        settingsManager.$workDuration
+            .combineLatest(
+                settingsManager.$shortBreakDuration,
+                settingsManager.$longBreakDuration,
+                settingsManager.$cyclesUntilLongBreak
+            )
+            .sink { [weak self] _, _, _, _ in
+                // タイマー停止中のみ設定を反映
+                if self?.currentState == .stopped {
+                    self?.resetTimer()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     func start() {
@@ -101,7 +114,7 @@ class PomodoroTimer: ObservableObject {
         switch currentSessionType {
         case .work:
             currentCycle += 1
-            if currentCycle >= cyclesUntilLongBreak {
+            if currentCycle >= settingsManager.cyclesUntilLongBreak {
                 currentSessionType = .longBreak
                 currentCycle = 0
             } else {
@@ -125,11 +138,11 @@ class PomodoroTimer: ObservableObject {
     private func getDurationForCurrentSession() -> TimeInterval {
         switch currentSessionType {
         case .work:
-            return workDuration
+            return settingsManager.workDuration
         case .shortBreak:
-            return shortBreakDuration
+            return settingsManager.shortBreakDuration
         case .longBreak:
-            return longBreakDuration
+            return settingsManager.longBreakDuration
         }
     }
     

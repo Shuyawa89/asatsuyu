@@ -37,9 +37,17 @@ class PersistenceController: ObservableObject {
         if context.hasChanges {
             do {
                 try context.save()
+                print("Core Data: 保存完了")
             } catch {
                 let nsError = error as NSError
-                fatalError("Core Data save error: \(nsError), \(nsError.userInfo)")
+                print("Core Data保存エラー: \(nsError.localizedDescription)")
+                print("エラー詳細: \(nsError.userInfo)")
+                
+                // ユーザーに通知（後でNotificationServiceで実装）
+                // NotificationService.shared.showErrorNotification("データの保存に失敗しました")
+                
+                // コンテキストをリセットして不整合状態を回避
+                context.reset()
             }
         }
     }

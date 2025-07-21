@@ -44,25 +44,34 @@ struct AsatsuyuApp: App {
             object: nil,
             queue: .main
         ) { _ in
-            sendClaudeCodeCompletionNotification()
+            Task { @MainActor in
+                AsatsuyuApp.sendClaudeCodeCompletionNotification()
+            }
         }
     }
     
-    private func sendClaudeCodeCompletionNotification() {
+    @MainActor
+    private static func sendClaudeCodeCompletionNotification() {
         let content = UNMutableNotificationContent()
-        content.title = "Claude Code実行完了"
-        content.body = "Asatsuyuアプリケーションの開発セッションが終了しました"
+        content.title = NSLocalizedString("Claude Code Execution Complete", comment: "Claude Code実行完了")
+        content.body = NSLocalizedString("Asatsuyu application development session has ended.", comment: "Asatsuyuアプリケーションの開発セッションが終了しました")
         content.sound = .default
+        content.categoryIdentifier = "CLAUDE_CODE_COMPLETION"
+        
+        // 小さな遅延を追加して配信の信頼性を向上
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 0.1, repeats: false)
         
         let request = UNNotificationRequest(
-            identifier: "claude-code-completion",
+            identifier: "claude-code-completion-\(Date().timeIntervalSince1970)",
             content: content,
-            trigger: nil // 即座に送信
+            trigger: trigger
         )
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("通知送信エラー: \(error)")
+                print("通知送信エラー: \(error.localizedDescription)")
+            } else {
+                print("Claude Code完了通知を送信しました")
             }
         }
     }

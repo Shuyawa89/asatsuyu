@@ -23,9 +23,9 @@ let package = Package(
             dependencies: [
                 // No external dependencies for now
             ],
-            path: "Sources",
+            path: "Sources/Asatsuyu",
             resources: [
-                .process("Asatsuyu/Models/AsatsuyuDataModel.xcdatamodeld")
+                .process("Models/AsatsuyuDataModel.xcdatamodeld")
             ]
         ),
         .testTarget(

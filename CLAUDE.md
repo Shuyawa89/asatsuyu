@@ -148,9 +148,10 @@ xcodebuild -scheme Asatsuyu -configuration Release archive
 
 ### 依存関係管理
 ```swift
-// Package.swift での DynamicNotchKit 追加
+// Package.swift - 外部依存なしで独自実装
 dependencies: [
-    .package(url: "https://github.com/MrKai77/DynamicNotchKit", from: "1.0.0")
+    // 外部ライブラリ依存なし
+    // NotchOverlayWindowによる独自実装を使用
 ]
 ```
 

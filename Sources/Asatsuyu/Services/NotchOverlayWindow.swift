@@ -158,7 +158,7 @@ class NotchProgressView: NSView {
             center: center,
             radius: radius,
             startAngle: -.pi / 2,  // 上から開始
-            endAngle: 3 * .pi / 2, // 270度
+            endAngle: -.pi / 2 + (2 * .pi * 0.75), // 270度（進捗アークと同じ）
             clockwise: false
         )
         context.addPath(backgroundPath)

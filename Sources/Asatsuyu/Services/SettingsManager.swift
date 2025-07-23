@@ -3,7 +3,7 @@ import Foundation
 
 @MainActor
 class SettingsManager: ObservableObject {
-    static let shared = SettingsManager()
+    @MainActor static let shared = SettingsManager()
 
     private let userDefaults = UserDefaults.standard
 

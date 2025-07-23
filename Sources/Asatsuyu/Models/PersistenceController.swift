@@ -3,7 +3,7 @@ import Foundation
 
 @MainActor
 class PersistenceController: ObservableObject {
-    static let shared = PersistenceController()
+    @MainActor static let shared = PersistenceController()
 
     lazy var container: NSPersistentContainer = {
         // Swift Package Manager環境では.xcdatamodeldファイルの読み込みに問題があるため

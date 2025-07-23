@@ -4,7 +4,7 @@ import SwiftUI
 
 @MainActor
 class NotchOverlayManager: ObservableObject {
-    static let shared = NotchOverlayManager()
+    @MainActor static let shared = NotchOverlayManager()
 
     private var overlayWindow: NotchOverlayWindow?
     private var cancellables = Set<AnyCancellable>()

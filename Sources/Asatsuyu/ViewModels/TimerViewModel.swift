@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 class TimerViewModel: ObservableObject {
     @Published var pomodoroTimer = PomodoroTimer()
+    private let notificationService = NotificationService.shared
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -15,6 +16,20 @@ class TimerViewModel: ObservableObject {
                 self?.objectWillChange.send()
             }
             .store(in: &cancellables)
+
+        // タイマー完了の監視
+        pomodoroTimer.$currentState
+            .sink { [weak self] state in
+                if state == .completed {
+                    self?.handleSessionComplete()
+                }
+            }
+            .store(in: &cancellables)
+
+        // 通知権限のリクエスト
+        Task {
+            await requestNotificationPermission()
+        }
     }
 
     // MARK: - Timer Controls
@@ -49,6 +64,10 @@ class TimerViewModel: ObservableObject {
         pomodoroTimer.currentState == .stopped
     }
 
+    var isCompleted: Bool {
+        pomodoroTimer.currentState == .completed
+    }
+
     var canStart: Bool {
         pomodoroTimer.currentState != .running
     }
@@ -58,7 +77,7 @@ class TimerViewModel: ObservableObject {
     }
 
     var canStop: Bool {
-        pomodoroTimer.currentState != .stopped
+        pomodoroTimer.currentState != .stopped && pomodoroTimer.currentState != .completed
     }
 
     var timeRemainingString: String {
@@ -75,6 +94,22 @@ class TimerViewModel: ObservableObject {
 
     var currentCycle: Int {
         pomodoroTimer.currentCycle
+    }
+
+    // MARK: - Notification Handling
+
+    private func requestNotificationPermission() async {
+        let granted = await notificationService.requestPermission()
+        print("📱 通知権限: \(granted ? "許可" : "拒否")")
+    }
+
+    private func handleSessionComplete() {
+        // セッション完了通知を送信
+        notificationService.scheduleSessionCompleteNotification(
+            for: pomodoroTimer.currentSessionType
+        )
+
+        print("🎉 セッション完了: \(pomodoroTimer.currentSessionType.localizedName)")
     }
 
     // MARK: - UI Colors

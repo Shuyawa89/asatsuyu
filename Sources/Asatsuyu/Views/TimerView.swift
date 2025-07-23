@@ -111,6 +111,8 @@ struct TimerView: View {
             return "一時停止"
         case .stopped:
             return "停止中"
+        case .completed:
+            return "完了"
         }
     }
 
@@ -121,6 +123,8 @@ struct TimerView: View {
         case .paused:
             return "再開"
         case .stopped:
+            return "開始"
+        case .completed:
             return "開始"
         }
     }
@@ -133,6 +137,8 @@ struct TimerView: View {
             return "play.fill"
         case .stopped:
             return "play.fill"
+        case .completed:
+            return "play.fill"
         }
     }
 
@@ -140,7 +146,7 @@ struct TimerView: View {
         switch viewModel.pomodoroTimer.currentState {
         case .running:
             viewModel.pauseTimer()
-        case .paused, .stopped:
+        case .paused, .stopped, .completed:
             viewModel.startTimer()
         }
     }

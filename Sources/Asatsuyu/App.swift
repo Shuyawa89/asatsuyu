@@ -9,8 +9,8 @@ struct AsatsuyuApp: App {
     @StateObject private var notchOverlayManager = NotchOverlayManager.shared
 
     init() {
-        requestNotificationPermission()
-        setupAppTerminationNotification()
+        // 通知機能は一時的に無効化（Swift 6.0並行性対応）
+        // Phase 2で再実装予定
     }
 
     var body: some Scene {

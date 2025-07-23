@@ -5,6 +5,7 @@ enum TimerState {
     case stopped
     case running
     case paused
+    case completed
 }
 
 enum SessionType: String, CaseIterable {
@@ -108,8 +109,17 @@ class PomodoroTimer: ObservableObject {
 
     private func sessionCompleted() {
         stopTimer()
-        currentState = .stopped
 
+        // 完了状態に設定（通知トリガー用）
+        currentState = .completed
+
+        // 少し遅らせて次のセッション準備
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.prepareNextSession()
+        }
+    }
+
+    private func prepareNextSession() {
         // 次のセッションタイプを決定
         switch currentSessionType {
         case .work:
@@ -124,10 +134,9 @@ class PomodoroTimer: ObservableObject {
             currentSessionType = .work
         }
 
+        // 停止状態に戻してタイマーをリセット
+        currentState = .stopped
         resetTimer()
-
-        // 通知を送信（後で実装）
-        // NotificationService.shared.sendSessionCompletedNotification()
     }
 
     private func resetTimer() {

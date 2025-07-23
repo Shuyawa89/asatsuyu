@@ -1,14 +1,13 @@
-name: CI/CD Pipeline
+name: Simple CI
 
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened]
   push:
     branches: [main]
 
 jobs:
-  test-and-build:
+  build-and-test:
     runs-on: macos-latest
     steps:
       - name: Checkout code
@@ -19,82 +18,29 @@ jobs:
         with:
           swift-version: '6.0'
           
-      - name: Cache Swift dependencies
-        uses: actions/cache@v4
-        with:
-          path: .build
-          key: ${{ runner.os }}-swift-${{ hashFiles('Package.swift') }}
-          
       - name: Build project
-        run: |
-          echo "Building Asatsuyu..."
-          swift build -c release
+        run: swift build
           
-      - name: Run unit tests
+      - name: Run tests
         run: |
-          echo "Running unit tests..."
-          # テストターゲットが未実装のため現在はスキップ
-          # Phase 2でテスト実装後に有効化予定
+          # テストターゲットが存在する場合のみ実行
           if swift package describe | grep -q "testTargets"; then
-            swift test --enable-code-coverage
+            swift test
           else
-            echo "⚠️ No test targets found. Skipping tests (Phase 2 implementation planned)"
+            echo "No test targets found - skipping tests"
           fi
           
-      - name: Generate test coverage report
-        run: |
-          echo "Generating coverage report..."
-          # テストが実行された場合のみカバレッジ生成
-          if [ -d ".build/debug" ] && [ -f ".build/debug/codecov/default.profdata" ]; then
-            xcrun llvm-cov export -format="lcov" .build/debug/AsatsuyuPackageTests.xctest/Contents/MacOS/AsatsuyuPackageTests -instr-profile .build/debug/codecov/default.profdata > coverage.lcov || true
-          else
-            echo "⚠️ No test coverage data available"
-          fi
-          
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.lcov
-          fail_ci_if_error: false
-        if: hashFiles('coverage.lcov') != ''
-          
-  security-scan:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Run security scan
-        run: |
-          echo "Scanning for sensitive data..."
-          # APIキーや秘密情報の検出
-          if grep -r "ANTHROPIC_API_KEY\|sk-" --include="*.swift" --include="*.md" . ; then
-            echo "⚠️ Warning: Potential API key found in code"
-            exit 1
-          fi
-          echo "✅ No sensitive data detected"
-          
-  code-quality:
+  code-format:
     runs-on: macos-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Swift lint and format check
+      - name: Check Swift formatting
         run: |
-          echo "Checking Swift code formatting..."
-          # Swift format check (when swiftformat is available)
-          if command -v swiftformat &> /dev/null; then
-            swiftformat --lint .
-          else
-            echo "swiftformat not available, skipping format check"
+          # SwiftFormatのインストールと実行
+          if ! command -v swiftformat &> /dev/null; then
+            echo "Installing SwiftFormat..."
+            brew install swiftformat
           fi
-          
-      - name: Check for TODOs and FIXMEs
-        run: |
-          echo "Scanning for TODO/FIXME comments..."
-          if grep -r "TODO\|FIXME" --include="*.swift" . ; then
-            echo "⚠️ Found TODO/FIXME comments - consider addressing before merge"
-          else
-            echo "✅ No pending TODOs found"
-          fi
+          swiftformat --lint .

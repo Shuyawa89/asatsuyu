@@ -1,0 +1,46 @@
+name: Simple CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '6.0'
+          
+      - name: Build project
+        run: swift build
+          
+      - name: Run tests
+        run: |
+          # テストターゲットが存在する場合のみ実行
+          if swift package describe | grep -q "testTargets"; then
+            swift test
+          else
+            echo "No test targets found - skipping tests"
+          fi
+          
+  code-format:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Check Swift formatting
+        run: |
+          # SwiftFormatのインストールと実行
+          if ! command -v swiftformat &> /dev/null; then
+            echo "Installing SwiftFormat..."
+            brew install swiftformat
+          fi
+          swiftformat --lint .
